@@ -117,8 +117,11 @@ async function uploadFtp(env) {
         console.log('\n✅ Pasta build/ enviada.\n');
 
         // Garantir que o entrypoint web em produção seja atualizado.
-        // Em hospedagem compartilhada normalmente o web root é public_html.
+        // Para estrutura Laravel em /site, o correto é publicar arquivos de /public.
         const webEntrypointCandidates = [
+            { local: join(root, 'public', 'index.php'), remote: remotePath ? `${remotePath}/index.php` : 'index.php' },
+            { local: join(root, 'public', '.htaccess'), remote: remotePath ? `${remotePath}/.htaccess` : '.htaccess' },
+            // Compatibilidade com estrutura antiga (index.php custom dentro de public_html)
             { local: join(root, 'public_html', 'index.php'), remote: remotePath ? `${remotePath}/index.php` : 'index.php' },
             { local: join(root, 'public_html', '.htaccess'), remote: remotePath ? `${remotePath}/.htaccess` : '.htaccess' },
             { local: join(root, 'public', 'robots.txt'), remote: remotePath ? `${remotePath}/robots.txt` : 'robots.txt' },
@@ -161,9 +164,26 @@ async function uploadFtp(env) {
                     console.warn('   Aviso ao enviar', remote, ':', e.message);
                 }
             }
-            // Arquivos raiz importantes (artisan, verificações, etc)
-            const rootFiles = ['artisan', 'index.php', '.htaccess', 'google251fd2bf505abc91.html', 'detective.php', 'test-web.php', 'test-backend-2.php', 'test-db-stats.php', 'test-error.php', 'check-vendor.php', 'ping-path.php', 'clear_cache.php', 'ler-historico.php', 'chk_php.php', 'sitemap.xml', 'robots.txt', 'depth-check.php', 'read-env.php', 'chk_v5.php'];
-            for (const file of rootFiles) {
+            // Arquivos importantes da raiz do backend (projeto Laravel em /site).
+            // index.php/.htaccess ficam no web root (FTP_REMOTE_PATH), nao na raiz do backend.
+            const backendRootFiles = [
+                'artisan',
+                'google251fd2bf505abc91.html',
+                'detective.php',
+                'test-web.php',
+                'test-backend-2.php',
+                'test-db-stats.php',
+                'test-error.php',
+                'check-vendor.php',
+                'ping-path.php',
+                'clear_cache.php',
+                'ler-historico.php',
+                'chk_php.php',
+                'depth-check.php',
+                'read-env.php',
+                'chk_v5.php',
+            ];
+            for (const file of backendRootFiles) {
                 const localFile = join(root, file);
                 const remoteFile = backendPath ? `${backendPath}/${file}` : file;
                 if (existsSync(localFile)) {

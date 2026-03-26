@@ -34,5 +34,6 @@ jobs:
           FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
           FTP_PORT: ${{ secrets.FTP_PORT }}
           FTP_REMOTE_PATH: ${{ secrets.FTP_REMOTE_PATH }}
+          BACKEND_REMOTE_PATH: ${{ secrets.BACKEND_REMOTE_PATH }}
           DEPLOY_SKIP_BUILD: '1'
         run: node scripts/deploy.js
