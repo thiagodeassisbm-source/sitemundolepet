@@ -116,6 +116,27 @@ async function uploadFtp(env) {
 
         console.log('\n✅ Pasta build/ enviada.\n');
 
+        // Garantir que o entrypoint web em produção seja atualizado.
+        // Em hospedagem compartilhada normalmente o web root é public_html.
+        const webEntrypointCandidates = [
+            { local: join(root, 'public_html', 'index.php'), remote: remotePath ? `${remotePath}/index.php` : 'index.php' },
+            { local: join(root, 'public_html', '.htaccess'), remote: remotePath ? `${remotePath}/.htaccess` : '.htaccess' },
+            { local: join(root, 'public', 'robots.txt'), remote: remotePath ? `${remotePath}/robots.txt` : 'robots.txt' },
+            { local: join(root, 'public', 'sitemap.xml'), remote: remotePath ? `${remotePath}/sitemap.xml` : 'sitemap.xml' },
+        ];
+
+        console.log('📤 Atualizando arquivos públicos essenciais...\n');
+        for (const file of webEntrypointCandidates) {
+            if (!existsSync(file.local)) continue;
+            try {
+                await client.uploadFrom(createReadStream(file.local), file.remote);
+                console.log('   OK:', file.remote);
+            } catch (e) {
+                console.warn('   Aviso ao enviar', file.remote, ':', e.message);
+            }
+        }
+        console.log('\n✅ Entrypoint público atualizado.\n');
+
         // Enviar backend (PHP, rotas, views) para o servidor
         const backendPath = (env.BACKEND_REMOTE_PATH || '').trim().replace(/\/+$/, '');
         if (backendPath) {
