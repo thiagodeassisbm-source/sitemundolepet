@@ -88,16 +88,24 @@ Route::get('/run-migrations-stats-v2', function () {
 });
 
 Route::get('/', function () {
-    $content = \App\Models\SiteContent::getContent('home');
-    // Se existir apenas 'initial' (seed antigo), usar como 'hero' para o frontend
-    if ($content->get('hero') === null && $content->get('initial')) {
-        $content->put('hero', $content->get('initial'));
+    try {
+        $content = \App\Models\SiteContent::getContent('home');
+        // Se existir apenas 'initial' (seed antigo), usar como 'hero' para o frontend
+        if ($content->get('hero') === null && $content->get('initial')) {
+            $content->put('hero', $content->get('initial'));
+        }
+        $videosContent = \App\Models\SiteContent::getContent('videos');
+        $videosList = $videosContent->get('videos')?->get('list');
+        $videos = $videosList ? (is_string($videosList) ? json_decode($videosList, true) : $videosList) : [];
+        $videos = is_array($videos) ? $videos : [];
+        $contactInfo = \App\Models\SiteContent::getContent('contact');
+    } catch (\Throwable $e) {
+        \Log::error('Public home fallback activated: ' . $e->getMessage());
+        $content = collect();
+        $videos = [];
+        $contactInfo = collect();
     }
-    $videosContent = \App\Models\SiteContent::getContent('videos');
-    $videosList = $videosContent->get('videos')?->get('list');
-    $videos = $videosList ? (is_string($videosList) ? json_decode($videosList, true) : $videosList) : [];
-    $videos = is_array($videos) ? $videos : [];
-    $contactInfo = \App\Models\SiteContent::getContent('contact');
+
     return Inertia::render('Home', [
         'cms' => $content,
         'videos' => $videos,
@@ -106,12 +114,19 @@ Route::get('/', function () {
 });
 
 Route::get('/historia', function () {
-    $content = \App\Models\SiteContent::getContent('history');
-    $hero = $content->get('hero', collect());
-    $history = $content->get('history', collect());
-    $merged = $hero->merge($history)->all();
-    $homeContent = \App\Models\SiteContent::getContent('home');
-    $whatsapp = $homeContent->get('profile')?->get('whatsapp') ?? '';
+    try {
+        $content = \App\Models\SiteContent::getContent('history');
+        $hero = $content->get('hero', collect());
+        $history = $content->get('history', collect());
+        $merged = $hero->merge($history)->all();
+        $homeContent = \App\Models\SiteContent::getContent('home');
+        $whatsapp = $homeContent->get('profile')?->get('whatsapp') ?? '';
+    } catch (\Throwable $e) {
+        \Log::error('Public history fallback activated: ' . $e->getMessage());
+        $merged = [];
+        $whatsapp = '';
+    }
+
     $response = Inertia::render('History', ['cms' => ['history' => $merged], 'whatsapp' => $whatsapp]);
     return $response->toResponse(request())
         ->header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
@@ -119,9 +134,16 @@ Route::get('/historia', function () {
 });
 
 Route::get('/contato', function () {
-    $content = \App\Models\SiteContent::getContent('contact');
-    $homeContent = \App\Models\SiteContent::getContent('home');
-    $whatsapp = $homeContent->get('profile')?->get('whatsapp') ?? '';
+    try {
+        $content = \App\Models\SiteContent::getContent('contact');
+        $homeContent = \App\Models\SiteContent::getContent('home');
+        $whatsapp = $homeContent->get('profile')?->get('whatsapp') ?? '';
+    } catch (\Throwable $e) {
+        \Log::error('Public contact fallback activated: ' . $e->getMessage());
+        $content = collect();
+        $whatsapp = '';
+    }
+
     return Inertia::render('Contact', ['cms' => $content, 'whatsapp' => $whatsapp]);
 });
 
