@@ -2,8 +2,6 @@
 
 namespace App\Providers;
 
-use App\Http\Middleware\HandleInertiaRequests;
-use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\URL;
 
@@ -24,18 +22,6 @@ class AppServiceProvider extends ServiceProvider
             URL::forceScheme('https');
         } else {
             URL::forceScheme('http');
-        }
-
-        // Compartilha SEO base no HTML inicial (render server-side) para crawlers.
-        try {
-            View::share('siteSeo', HandleInertiaRequests::siteSeoShared());
-        } catch (\Throwable $e) {
-            View::share('siteSeo', (object) [
-                'title' => config('app.name', 'Mundo Le Pet'),
-                'description' => '',
-                'favicon' => '',
-                'og_image_full' => '',
-            ]);
         }
     }
 }
