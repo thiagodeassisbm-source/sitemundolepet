@@ -1,0 +1,3 @@
+Deploy OK - Mundo Le Pet
+Arquivo criado em: 2025
+Se você está vendo este texto, o arquivo está na pasta correta do servidor (public ou public_html).
