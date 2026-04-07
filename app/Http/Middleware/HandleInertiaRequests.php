@@ -16,19 +16,9 @@ class HandleInertiaRequests extends Middleware
      */
     protected $rootView = 'app';
 
-    /**
-     * Determines the current asset version.
-     * Usa a data de alteração do manifest do Vite para recarregar os assets quando houver atualização.
-     *
-     * @see https://inertiajs.com/asset-versioning
-     */
     public function version(Request $request): ?string
     {
-        $manifestPath = public_path('build/manifest.json');
-        if (is_file($manifestPath)) {
-            return (string) filemtime($manifestPath);
-        }
-        return parent::version($request);
+        return env('APP_VERSION', parent::version($request));
     }
 
     /**

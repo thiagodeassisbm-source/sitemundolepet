@@ -1,0 +1,1 @@
+import{c as t}from"./proxy-zxslIDDT.js";const o=[["path",{d:"M7 7h10v10",key:"1tivn9"}],["path",{d:"M7 17 17 7",key:"1vkiza"}]],r=t("arrow-up-right",o);const e=[["path",{d:"M16 7h6v6",key:"box55l"}],["path",{d:"m22 7-8.5 8.5-5-5L2 17",key:"1t1m79"}]],a=t("trending-up",e);export{r as A,a as T};

@@ -1,0 +1,93 @@
+<?php
+
+use Illuminate\Support\Facades\Route;
+use Inertia\Inertia;
+
+Route::get('/', function () {
+    return Inertia::render('Home');
+});
+
+Route::get('/historia', function () {
+    return Inertia::render('History');
+});
+
+Route::get('/contato', function () {
+    return Inertia::render('Contact');
+});
+
+Route::prefix('admin')->group(function () {
+    Route::get('/login', function () {
+        return Inertia::render('Admin/Login');
+    });
+
+    Route::get('/dashboard', function () {
+        return Inertia::render('Admin/Dashboard');
+    });
+
+    Route::get('/content', function () {
+        return Inertia::render('Admin/HomeContent');
+    });
+
+    Route::get('/videos', function () {
+        return Inertia::render('Admin/Videos');
+    });
+
+    Route::get('/users', function () {
+        return Inertia::render('Admin/Users');
+    });
+
+    Route::get('/google/insights', function () {
+        $isConnected = false;
+        $analyticsData = null;
+        $summary = null;
+        $searchData = null;
+        $pageSpeed = null;
+        $account = null;
+
+        try {
+            $account = \Illuminate\Support\Facades\DB::table('google_accounts')->first();
+            $isConnected = (bool)$account;
+            
+            if ($isConnected) {
+                if ($account->property_id) {
+                    $analytics = new \App\Services\Google\GoogleAnalyticsService();
+                    $analyticsData = $analytics->getVisitors30Days($account->property_id);
+                    $summary = $analytics->getSummary($account->property_id);
+                }
+
+                if ($account->site_url) {
+                    $search = new \App\Services\Google\GoogleSearchConsoleService();
+                    $searchData = $search->getSearchMetrics($account->site_url);
+                    
+                    // PageSpeed cached no metrics_cache ou live? Vamos fazer live pra teste
+                    $ps = new \App\Services\Google\GooglePageSpeedService();
+                    $pageSpeed = $ps->getPerformanceMetrics($account->site_url);
+                }
+            }
+        } catch (\Exception $e) {
+            \Log::warning("Google Insights DB Error: " . $e->getMessage());
+        }
+
+        return Inertia::render('Admin/GoogleInsights', [
+            'isConnected' => $isConnected,
+            'analyticsData' => $analyticsData,
+            'summary' => $summary,
+            'searchData' => $searchData,
+            'pageSpeed' => $pageSpeed,
+            'settings' => [
+                'property_id' => $account->property_id ?? '',
+                'site_url' => $account->site_url ?? '',
+                'client_id' => $account->client_id ?? '',
+                'client_secret' => $account->client_secret ?? '',
+                'redirect_uri' => $account->redirect_uri ?? '',
+                'api_key' => $account->api_key ?? '',
+            ]
+        ]);
+    })->name('admin.google.insights');
+
+    Route::post('/google/settings', [App\Http\Controllers\Admin\GoogleController::class, 'updateSettings'])->name('admin.google.settings');
+
+    // Google OAuth Routes
+    Route::get('/google/connect', [App\Http\Controllers\Admin\GoogleController::class, 'connect'])->name('admin.google.connect');
+    Route::get('/google/callback', [App\Http\Controllers\Admin\GoogleController::class, 'callback'])->name('admin.google.callback');
+});
