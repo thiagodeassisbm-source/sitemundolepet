@@ -1,0 +1,34 @@
+name: Deploy Seguro
+on:
+  push:
+    branches:
+      - main
+jobs:
+  web-deploy:
+    name: Deploy para Produção
+    runs-on: ubuntu-latest
+    steps:
+    - name: 🚚 Get latest code
+      uses: actions/checkout@v4
+
+    - name: 📂 Sync files
+      uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+      with:
+        server: ${{ secrets.FTP_HOST }}
+        username: ${{ secrets.FTP_USER }}
+        password: ${{ secrets.FTP_PASSWORD }}
+        port: ${{ secrets.FTP_PORT || 21 }}
+        local-dir: ./
+        server-dir: ${{ secrets.FTP_REMOTE_PATH || '/' }}
+        # Não apaga os arquivos do servidor por segurança
+        delete-removed: false
+        # Ignora arquivos de sistema e de ambiente locais
+        exclude: |
+          **/.git*
+          **/.git*/**
+          **/node_modules/**
+          .env
+          .env.production
+          scripts/**
+          storage/*.key
+          vendor/**
