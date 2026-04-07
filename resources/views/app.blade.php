@@ -49,7 +49,7 @@
     <link rel="icon" href="{{ asset('favicon.png') }}" sizes="32x32">
     <link rel="icon" href="{{ asset('favicon-48x48.png') }}" sizes="48x48">
     <link rel="apple-touch-icon" href="{{ asset('apple-touch-icon.png') }}">
-    {{-- Fallback para o favicon dinâmico se for diferente --}}
+    {{-- Fallback para o favicon dinâmico se for configurado na administração --}}
     @if($seoFavicon)
         <link rel="icon" type="image/png" href="{{ $faviconUrl }}">
     @endif
