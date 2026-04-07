@@ -14,15 +14,15 @@ jobs:
     - name: 📂 Sync files
       uses: SamKirkland/FTP-Deploy-Action@v4.3.5
       with:
-        server: ${{ secrets.FTP_HOST }}
-        username: ${{ secrets.FTP_USER }}
+        server: ${{ secrets.FTP_HOST || secrets.FTP_HOSTNAME }}
+        username: ${{ secrets.FTP_USER || secrets.FTP_USERNAME }}
         password: ${{ secrets.FTP_PASSWORD }}
         port: ${{ secrets.FTP_PORT || 21 }}
         local-dir: ./
         server-dir: ${{ secrets.FTP_REMOTE_PATH || '/' }}
-        # Não apaga os arquivos do servidor por segurança
-        delete-removed: false
+        # Removido parâmetro incompatível
         # Ignora arquivos de sistema e de ambiente locais
+
         exclude: |
           **/.git*
           **/.git*/**
