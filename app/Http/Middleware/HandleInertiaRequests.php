@@ -32,6 +32,9 @@ class HandleInertiaRequests extends Middleware
     {
         return [
             ...parent::share($request),
+            'auth' => [
+                'user' => $request->user(),
+            ],
             'errors' => fn () => $request->session()->get('errors')
                 ? $request->session()->get('errors')->getBag('default')->getMessages()
                 : (object) [],
@@ -39,44 +42,6 @@ class HandleInertiaRequests extends Middleware
             'agendamentosPendentesCount' => fn () => $request->user()
                 ? \App\Models\Appointment::where('status', 'pendente')->count()
                 : 0,
-            'siteSeo' => fn () => static::siteSeoShared(),
-        ];
-    }
-
-    /**
-     * Título, descrição, favicon e og:image do site (Google / compartilhamento).
-     * Usado no <head> das páginas públicas.
-     */
-    public static function siteSeoShared(): object
-    {
-        // Título e descrição: mesmas queries do admin (Configurações > Site e Google)
-        $title = \App\Models\SiteContent::getSiteTitle();
-        $description = \App\Models\SiteContent::getSiteDescription();
-
-        $content = \App\Models\SiteContent::getContent('site');
-        $seo = $content->get('seo');
-        if (!$seo || !$seo instanceof \Illuminate\Support\Collection) {
-            return (object) [
-                'title' => $title,
-                'description' => $description,
-                'favicon' => '',
-                'og_image' => '',
-                'og_image_full' => '',
-            ];
-        }
-        $arr = $seo->all();
-        $favicon = $arr['favicon'] ?? '';
-        $ogImage = $arr['og_image'] ?? '';
-        $ogImageFull = $ogImage && str_starts_with((string) $ogImage, '/')
-            ? (request()->getSchemeAndHttpHost() . $ogImage)
-            : (string) $ogImage;
-
-        return (object) [
-            'title' => $title !== '' ? $title : trim((string) ($arr['title'] ?? '')),
-            'description' => $description !== '' ? $description : trim((string) ($arr['description'] ?? '')),
-            'favicon' => $favicon,
-            'og_image' => $ogImage,
-            'og_image_full' => $ogImageFull,
         ];
     }
 }
