@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import AgendamentoModal from '@/Components/AgendamentoModal';
+import { publicAsset, withFallbackAsset } from '@/lib/publicAsset';
 
 export default function History({ cms, whatsapp }) {
     const { props } = usePage();
@@ -74,13 +75,23 @@ export default function History({ cms, whatsapp }) {
     ];
 
     const version = new Date().getTime();
+    const logoAsset = withFallbackAsset('/images/logo_reta.png');
     return (
         <div className="min-h-screen bg-[#FFF7FB] font-sans scroll-smooth">
             <AgendamentoModal open={agendamentoOpen} onClose={() => setAgendamentoOpen(false)} whatsapp={whatsapp} />
             <Head>
                 <title>{`Nossa História - ${siteSeo.title || 'Mundo Le Pet'}`}</title>
-                {siteSeo.description && <meta name="description" content={siteSeo.description} />}
-                {siteSeo.favicon && <link rel="icon" href={`${siteSeo.favicon}?v=${version}`} />}
+                <meta name="description" content={siteSeo.description || 'Na Mundo Le Pet, oferecemos atendimento veterinário especializado em Nutrologia e Dermatologia, além de consultas clínicas, exames e vacinação em Goiânia.'} />
+                <meta name="robots" content="index, follow" />
+                <link rel="canonical" href="https://mundolepet.com.br/historia" />
+                
+                {siteSeo.favicon && (
+                    <>
+                        <link rel="shortcut icon" href={publicAsset(siteSeo.favicon)} />
+                        <link rel="apple-touch-icon" href={publicAsset(siteSeo.favicon)} />
+                        <link rel="icon" type="image/png" sizes="32x32" href={publicAsset(siteSeo.favicon)} />
+                    </>
+                )}
                 {siteSeo.og_image_full && <meta property="og:image" content={siteSeo.og_image_full} />}
             </Head>
 
@@ -92,9 +103,13 @@ export default function History({ cms, whatsapp }) {
                         onClick={() => goToHomeSection('inicio')}
                     >
                         <img
-                            src={`/images/logo_reta.png?v=${version}`}
+                            src={`${logoAsset.primary}?v=${version}`}
                             alt="Mundo Le Pet Logo"
                             className="h-20 w-auto object-contain"
+                            onError={(e) => {
+                                e.currentTarget.onerror = null;
+                                e.currentTarget.src = `${logoAsset.fallback}?v=${version}`;
+                            }}
                         />
                     </div>
 
@@ -147,7 +162,15 @@ export default function History({ cms, whatsapp }) {
                             className="fixed top-0 right-0 bottom-0 w-[min(320px,85vw)] bg-white shadow-2xl z-[70] md:hidden flex flex-col py-6 px-6"
                         >
                             <div className="flex justify-between items-center mb-8">
-                                <img src={`/images/logo_reta.png?v=${version}`} alt="Mundo Le Pet" className="h-12 w-auto" />
+                                <img
+                                    src={`${logoAsset.primary}?v=${version}`}
+                                    alt="Mundo Le Pet"
+                                    className="h-12 w-auto"
+                                    onError={(e) => {
+                                        e.currentTarget.onerror = null;
+                                        e.currentTarget.src = `${logoAsset.fallback}?v=${version}`;
+                                    }}
+                                />
                                 <button
                                     type="button"
                                     onClick={() => setMobileMenuOpen(false)}

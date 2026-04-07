@@ -27,6 +27,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import AgendamentoModal from '@/Components/AgendamentoModal';
+import { publicAsset, withFallbackAsset } from '@/lib/publicAsset';
 
 // Gera style para fonte e tamanho numérico (só aplica se valor for número)
 function textStyle(font, size) {
@@ -51,7 +52,19 @@ const Home = ({ cms, videos: serverVideos, contactInfo: contactInfoProp }) => {
         { id: "M7lc1UVf-VE", title: "Benefícios da Alimentação Natural", summary: "Descubra como a dieta fresca transforma a vida do seu pet." },
         { id: "dQw4w9WgXcQ", title: "Dicas de Dermatologia Pet", summary: "Entenda as causas comuns de coceiras e alergias." }
     ];
-    const videos = (Array.isArray(serverVideos) && serverVideos.length > 0) ? serverVideos : defaultVideos;
+    const videos = (() => {
+        const source = (Array.isArray(serverVideos) && serverVideos.length > 0) ? serverVideos : defaultVideos;
+        return [...source].sort((a, b) => {
+            const aTs = a?.posted_at ? Date.parse(a.posted_at) : Number.NaN;
+            const bTs = b?.posted_at ? Date.parse(b.posted_at) : Number.NaN;
+            const aHasDate = Number.isFinite(aTs);
+            const bHasDate = Number.isFinite(bTs);
+            if (aHasDate && bHasDate) return bTs - aTs;
+            if (aHasDate) return -1;
+            if (bHasDate) return 1;
+            return 0;
+        });
+    })();
     const [activeVideo, setActiveVideo] = useState(videos[0]?.id || "ur3d92sVvIw");
 
     // Reset videoLoaded when activeVideo changes
@@ -104,7 +117,7 @@ const Home = ({ cms, videos: serverVideos, contactInfo: contactInfoProp }) => {
             descFont: cms?.differentials?.card1_text_font,
             descSize: cms?.differentials?.card1_text_size,
             icon: cms?.differentials?.card1_image ? (
-                <img src={cms.differentials.card1_image} alt="Icon" className="w-10 h-10 object-contain" loading="lazy" />
+                <img src={cms.differentials.card1_image} alt={cms.differentials.card1_title || "Alimentação Natural"} className="w-10 h-10 object-contain" loading="lazy" />
             ) : (
                 <Leaf className="w-8 h-8 text-[#54B6B5]" />
             ),
@@ -118,7 +131,7 @@ const Home = ({ cms, videos: serverVideos, contactInfo: contactInfoProp }) => {
             descFont: cms?.differentials?.card2_text_font,
             descSize: cms?.differentials?.card2_text_size,
             icon: cms?.differentials?.card2_image ? (
-                <img src={cms.differentials.card2_image} alt="Icon" className="w-10 h-10 object-contain" loading="lazy" />
+                <img src={cms.differentials.card2_image} alt={cms.differentials.card2_title || "Dermatologia"} className="w-10 h-10 object-contain" loading="lazy" />
             ) : (
                 <Heart className="w-8 h-8 text-[#FF69B4]" />
             ),
@@ -132,7 +145,7 @@ const Home = ({ cms, videos: serverVideos, contactInfo: contactInfoProp }) => {
             descFont: cms?.differentials?.card3_text_font,
             descSize: cms?.differentials?.card3_text_size,
             icon: cms?.differentials?.card3_image ? (
-                <img src={cms.differentials.card3_image} alt="Icon" className="w-10 h-10 object-contain" loading="lazy" />
+                <img src={cms.differentials.card3_image} alt={cms.differentials.card3_title || "Consultas Especializadas"} className="w-10 h-10 object-contain" loading="lazy" />
             ) : (
                 <Stethoscope className="w-8 h-8 text-[#572981]" />
             ),
@@ -253,19 +266,26 @@ const Home = ({ cms, videos: serverVideos, contactInfo: contactInfoProp }) => {
     };
 
     const version = new Date().getTime();
+    const logoAsset = withFallbackAsset('/images/logo_reta.png');
     return (
         <div className="min-h-screen bg-[#FFFAFA] selection:bg-[#572981]/20 font-sans scroll-smooth">
             <AgendamentoModal open={agendamentoOpen} onClose={() => setAgendamentoOpen(false)} whatsapp={cms?.profile?.whatsapp} />
             <Head>
-                {/* Só define título no React quando veio do admin; senão mantém o que a Blade já colocou (evita sobrescrever com texto errado) */}
-                {(siteSeo.title && String(siteSeo.title).trim()) ? (
-                    <title>{String(siteSeo.title).trim()}</title>
-                ) : null}
-                <meta name="description" content={siteSeo.description || 'Mundo Le Pet: Nutrologia pet, dermatologia e alimentação natural com a Dra. Thania Alvarenga.'} />
-                {siteSeo.favicon && <link rel="icon" href={`${siteSeo.favicon}?v=${version}`} />}
+                <title>{(siteSeo.title && String(siteSeo.title).trim()) ? String(siteSeo.title).trim() : "Mundo Le Pet - Excelência em Nutrologia e Dermatologia Pet"}</title>
+                <meta name="description" content={siteSeo.description || 'Na Mundo Le Pet, oferecemos atendimento veterinário especializado em Nutrologia e Dermatologia, além de consultas clínicas, exames e vacinação em Goiânia.'} />
+                <meta name="robots" content="index, follow" />
+                <link rel="canonical" href="https://mundolepet.com.br/" />
+                
+                {siteSeo.favicon && (
+                    <>
+                        <link rel="shortcut icon" href={publicAsset(siteSeo.favicon)} />
+                        <link rel="apple-touch-icon" href={publicAsset(siteSeo.favicon)} />
+                        <link rel="icon" type="image/png" sizes="32x32" href={publicAsset(siteSeo.favicon)} />
+                    </>
+                )}
                 {siteSeo.og_image_full && <meta property="og:image" content={siteSeo.og_image_full} />}
-                {siteSeo.title && <meta property="og:title" content={siteSeo.title} />}
-                {siteSeo.description && <meta property="og:description" content={siteSeo.description} />}
+                <meta property="og:title" content={siteSeo.title || "Mundo Le Pet - Excelência em Nutrologia e Dermatologia Pet"} />
+                <meta property="og:description" content={siteSeo.description || 'Na Mundo Le Pet, oferecemos atendimento veterinário especializado em Nutrologia e Dermatologia, além de consultas clínicas, exames e vacinação em Goiânia.'} />
             </Head>
 
             {/* Navigation */}
@@ -273,9 +293,13 @@ const Home = ({ cms, videos: serverVideos, contactInfo: contactInfoProp }) => {
                 <div className="container mx-auto px-4 sm:px-6 flex justify-between items-center gap-3">
                     <div className="min-w-0 flex-shrink flex items-center gap-2 cursor-pointer" onClick={() => scrollToSection('inicio')}>
                         <img
-                            src={`/images/logo_reta.png?v=${new Date().getTime()}`}
+                            src={`${logoAsset.primary}?v=${version}`}
                             alt="Mundo Le Pet Logo"
                             className="h-20 w-auto object-contain"
+                            onError={(e) => {
+                                e.currentTarget.onerror = null;
+                                e.currentTarget.src = `${logoAsset.fallback}?v=${version}`;
+                            }}
                         />
                     </div>
 
@@ -330,7 +354,15 @@ const Home = ({ cms, videos: serverVideos, contactInfo: contactInfoProp }) => {
                             className="fixed top-0 right-0 bottom-0 w-[min(320px,85vw)] bg-white shadow-2xl z-[70] md:hidden flex flex-col py-6 px-6"
                         >
                             <div className="flex justify-between items-center mb-8">
-                                <img src={`/images/logo_reta.png?v=${new Date().getTime()}`} alt="Mundo Le Pet" className="h-12 w-auto" />
+                                <img
+                                    src={`${logoAsset.primary}?v=${version}`}
+                                    alt="Mundo Le Pet"
+                                    className="h-12 w-auto"
+                                    onError={(e) => {
+                                        e.currentTarget.onerror = null;
+                                        e.currentTarget.src = `${logoAsset.fallback}?v=${version}`;
+                                    }}
+                                />
                                 <button
                                     type="button"
                                     onClick={() => setMobileMenuOpen(false)}
@@ -757,9 +789,13 @@ const Home = ({ cms, videos: serverVideos, contactInfo: contactInfoProp }) => {
                         <div className="col-span-1 md:col-span-1">
                             <div className="inline-block bg-white p-4 rounded-2xl mb-8 shadow-inner">
                                 <img
-                                    src={`/images/logo_reta.png?v=${new Date().getTime()}`}
+                                    src={`${logoAsset.primary}?v=${version}`}
                                     alt="Mundo Le Pet Logo"
                                     className="h-12 w-auto object-contain"
+                                    onError={(e) => {
+                                        e.currentTarget.onerror = null;
+                                        e.currentTarget.src = `${logoAsset.fallback}?v=${version}`;
+                                    }}
                                 />
                             </div>
                             <p className="text-purple-200 leading-relaxed">
