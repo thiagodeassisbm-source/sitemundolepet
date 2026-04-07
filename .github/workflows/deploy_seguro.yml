@@ -32,3 +32,4 @@ jobs:
           scripts/**
           storage/*.key
           vendor/**
+          resources/views/app.blade.php
