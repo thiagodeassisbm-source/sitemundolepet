@@ -1,30 +1,21 @@
 <?php
 
-use Illuminate\Foundation\Application;
-use Illuminate\Http\Request;
+/**
+ * Laravel - A PHP Framework For Web Artisans
+ *
+ * @package  Laravel
+ * @author   Taylor Otwell <taylor@laravel.com>
+ */
 
-define('LARAVEL_START', microtime(true));
+$uri = urldecode(
+    parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH)
+);
 
-/*
-|--------------------------------------------------------------------------
-| Resolve Laravel base path
-|--------------------------------------------------------------------------
-|
-| Laravel 11's default index.php handles everything relative to this file.
-|
-*/
-$basePath = __DIR__;
-
-// Determine if the application is in maintenance mode...
-if (file_exists($maintenance = $basePath.'/storage/framework/maintenance.php')) {
-    require $maintenance;
+// This file allows us to emulate Apache's "mod_rewrite" functionality from the
+// built-in PHP web server. This provides a convenient way to test a Laravel
+// application without having installed a "real" web server software here.
+if ($uri !== '/' && file_exists(__DIR__.'/public'.$uri)) {
+    return false;
 }
 
-// Register the Composer autoloader...
-require $basePath.'/vendor/autoload.php';
-
-// Bootstrap Laravel and handle the request...
-/** @var Application $app */
-$app = require_once $basePath.'/bootstrap/app.php';
-
-$app->handleRequest(Request::capture());
+require_once __DIR__.'/public/index.php';
